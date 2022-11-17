@@ -9,7 +9,7 @@ X is a 3x2 matrix of cross counts and has the following table general structure:
           |---------------------|
   Guess	  | Treatment | Placebo |			
 ----------|---------------------|
-Treatment |    n11    |   n12   |	       |n11 n12|
+Treatment |    n11    |   n12   |          |n11 n12|
 Placebo   |    n21    |   n22   |  --> X = |n21 n22|
 Don't Know|    n31    |   n33   |          |n31 n32|
 
@@ -31,11 +31,11 @@ NOTE: for Bang's BI, X may have five levels of guessing.
 5x2 matrix structure:
          Guess            | Treatment | Placebo |
 --------------------------|---------------------|
-Strongly Believe Treatment|    n11	  |   n12   |         |n11 n12|
-Somewhat Believe Treatment|    n21	  |   n22   |         |n21 n22|
-Somewhat Believe Placebo  |    n31	  |   n32   | --> X = |n31 n32|
-Strongly Believe Plecebo  |    n41	  |   n42   |         |n41 n42|
-Don't know                |    n51	  |   n52   |         |n51 n52|
+Strongly Believe Treatment|    n11    |   n12   |         |n11 n12|
+Somewhat Believe Treatment|    n21    |   n22   |         |n21 n22|
+Somewhat Believe Placebo  |    n31    |   n32   | --> X = |n31 n32|
+Strongly Believe Plecebo  |    n41    |   n42   |         |n41 n42|
+Don't know                |    n51    |   n52   |         |n51 n52|
 
 
 2x2 ancillary matrix structure:
