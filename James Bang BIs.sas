@@ -5,23 +5,23 @@ Sourse: https://pubmed.ncbi.nlm.nih.gov/8841652/
 		https://pubmed.ncbi.nlm.nih.gov/15020033/
 
 X is a 3x2 matrix of cross counts and has the following table general structure:
-          |		Assignment	    |
+          |		Assignment      |
           |---------------------|
   Guess	  | Treatment | Placebo |			
 ----------|---------------------|
-Treatment |	   n11	  |	 n12    |	        |n11 n12|
-Placebo   |	   n21	  |	 n22    |	--> X =	|n21 n22|
+Treatment |	   n11    |	 n12    |	        |n11 n12|
+Placebo   |	   n21    |	 n22    |	--> X =	|n21 n22|
 Don't Know|	   n31    |	 n33    |			|n31 n32|
 
 NOTE: for James' BI, X may have two treatment arms:
-				 |				  Assignment				  |
-				 |--------------------------------------------|
-	 Guess  	 |Treatment, dose1| Treatment, dose2| Placebo |
+                 |                Assignment                  |
+                 |--------------------------------------------|
+     Guess       |Treatment, dose1| Treatment, dose2| Placebo |
 -----------------|----------------------------------|---------|
 Treatment, dose1 |	  	 n11   	  |	  	  n12	    |	n13	  |			|n11 n12 n13|
 Treatment, dose2 |	  	 n21   	  |	  	  n22	    |	n23	  |	--> X = |n21 n22 n23|
-Placebo    		 |	  	 n31   	  |	  	  n32	    |	n33	  |			|n31 n32 n33|
-Don't Know 		 |	  	 n41   	  |	  	  n42	    |	n43	  |			|n41 n42 n43|
+Placebo    		 |       n31   	  |	  	  n32	    |	n33	  |			|n31 n32 n33|
+Don't Know 		 |       n41   	  |	  	  n42	    |	n43	  |			|n41 n42 n43|
 
 NOTE: for Bang's BI, X may have five levels of guessing.
 	  In this case an ancillary table for the subjects who answered Don't Know should be provided.
@@ -29,7 +29,7 @@ NOTE: for Bang's BI, X may have five levels of guessing.
 	  Somewhat Believe Treatment & Strongly Believe Placebo aggregated as Placebo: 5x2 matrix will be transformed into 3x2 matrix.
 
 5x2 matrix structure:
-		  Guess			  | Treatment | Placebo |
+         Guess            | Treatment | Placebo |
 --------------------------|---------------------|
 Strongly Believe Treatment|	   n11	  |   n12	|			|n11 n12|
 Somewhat Believe Treatment|	   n21	  |   n22	|			|n21 n22|
@@ -40,10 +40,10 @@ Don't know				  |	   n51	  |   n52	|			|n51 n52|
 
 2x2 ancillary matrix structure:
 
-  Guess	  | Treatment | Placebo |
+  Guess   | Treatment | Placebo |
 ----------|---------------------|
-Treatment |	    n11	  |	  n12   |	--> ANCILLARY = |n11 n12|
-Placebo   |	    n21	  |	  n22   |		    		|n21 n22|
+Treatment |     n11	  |	  n12   |	--> ANCILLARY = |n11 n12|
+Placebo   |     n21	  |	  n22   |		    		|n21 n22|
 
 
 direction is an option to specify a type of the confidence limits:
