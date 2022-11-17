@@ -5,8 +5,8 @@ Sourse: https://pubmed.ncbi.nlm.nih.gov/8841652/
 		https://pubmed.ncbi.nlm.nih.gov/15020033/
 
 X is a 3x2 matrix of cross counts and has the following table general structure:
-		  |		Assignment	    |
-		  |---------------------|
+          |		Assignment	    |
+          |---------------------|
   Guess	  | Treatment | Placebo |			
 ----------|---------------------|
 Treatment |	   n11	  |	 n12    |	        |n11 n12|
