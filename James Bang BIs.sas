@@ -5,21 +5,21 @@ Sourse: https://pubmed.ncbi.nlm.nih.gov/8841652/
 		https://pubmed.ncbi.nlm.nih.gov/15020033/
 
 X is a 3x2 matrix of cross counts and has the following table general structure:
-          |		Assignment      |
+          |     Assignment      |
           |---------------------|
   Guess	  | Treatment | Placebo |			
 ----------|---------------------|
-Treatment |	   n11    |	 n12    |	        |n11 n12|
-Placebo   |	   n21    |	 n22    |	--> X =	|n21 n22|
-Don't Know|	   n31    |	 n33    |			|n31 n32|
+Treatment |    n11    |   n12   |	        |n11 n12|
+Placebo   |    n21    |   n22   |	--> X =	|n21 n22|
+Don't Know|    n31    |   n33   |           |n31 n32|
 
 NOTE: for James' BI, X may have two treatment arms:
                  |                Assignment                  |
                  |--------------------------------------------|
      Guess       |Treatment, dose1| Treatment, dose2| Placebo |
 -----------------|----------------------------------|---------|
-Treatment, dose1 |	  	 n11   	  |	  	  n12	    |	n13	  |         |n11 n12 n13|
-Treatment, dose2 |	  	 n21   	  |	  	  n22	    |	n23	  |	--> X = |n21 n22 n23|
+Treatment, dose1 |       n11   	  |	  	  n12	    |	n13	  |         |n11 n12 n13|
+Treatment, dose2 |       n21   	  |	  	  n22	    |	n23	  |	--> X = |n21 n22 n23|
 Placebo          |       n31   	  |	  	  n32	    |	n33	  |         |n31 n32 n33|
 Don't Know       |       n41   	  |	  	  n42	    |	n43	  |         |n41 n42 n43|
 
