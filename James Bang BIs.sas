@@ -358,28 +358,28 @@ ods listing; options nodate nonumber pagesize=40 linesize=64 FORMDLIM= FORMCHAR=
 44 51 52
 }), direction='twosided');
 
-*Table V from James 1996 paper;
+*Table V from James' 1996 paper;
 %BI(%str({
 145 34,	
 71 59,	
 76 38
 }), direction='twosided');
 
-*Table 4 from Bang 2010 paper;
+*Table 4 from Bang's 2010 paper;
 %BI(%str({
 21 19,
 0 4,
 24 26
 }));
 
-*Table 5 from Bang 2010 paper;
+*Table 5 from Bang's 2010 paper;
 %BI(%str({
 41 14,
 55 99,
 130 106
 }));
 
-*Table 7 from Bang 2004 paper;
+*Table 7 from Bang's 2004 paper;
 %BI(
 %str({
 82 27,
@@ -387,7 +387,7 @@ ods listing; options nodate nonumber pagesize=40 linesize=64 FORMDLIM= FORMCHAR=
 170 83
 }));
 
-*Table 6 and 8 from Bang 2004 paper;
+*Table 6 and 8 from Bang's 2004 paper;
 %BI(
 X=%str({
 38 11,
@@ -402,7 +402,7 @@ ANCILLARY=%str({
 })
 );
 
-*Table 6 from Bang 2004 paper;
+*Table 6 from Bang's 2004 paper;
 %BI(
 X=%str({
 38 11,
