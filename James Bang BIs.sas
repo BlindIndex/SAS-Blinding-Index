@@ -77,9 +77,9 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 
 		N = x[+];
 		rowTot = x[,+];
-		x = insert(x, rowTot, 0, ncolX+1);
+		x = insert(x, rowTot, 0, ncolX + 1);
 		colTot = x[+,];
-		x = insert(x, colTot, nrowX+1);
+		x = insert(x, colTot, nrowX + 1);
 
 		*Weights assignment:
 		0 	 = correct guess
@@ -117,13 +117,13 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 			do j=1 to (ncol(P) - 1);
 				Pdo = Pdo + ((Weights[i, j] * P[i, j]) / (1 - Pdk));
 				Pde = Pde + ((Weights[i, j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j])) / (1 - Pdk) ** 2);
-				denom = denom + Weights[i,j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j]);
+				denom = denom + Weights[i, j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j]);
 			end;
 		end;
 
 		denom = 4 * denom ** 2;
 		Kd = (Pdo - Pde) / Pde;
-		JamesBI = j(1,4,.);
+		JamesBI = j(1, 4, .);
 		JamesBI[1,1] = round((1 + Pdk + (1 - Pdk) * Kd) / 2, .001);
 		num = 0;
 
@@ -200,7 +200,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 						rowTot32 = x32[,+];
 						x32 = insert(x32, rowTot32, 0, ncolX32 + 1);
 						colTot32 = x32[+,];
-						x32 = insert(x32, colTot32, nrowX32+1);
+						x32 = insert(x32, colTot32, nrowX32 + 1);
 						x32 = x32`;
 
 						do i=1 to 2;
@@ -254,20 +254,20 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 
 						do i = 1 to ncol(x);
 							do j = 1 to nrow(x)-1;
-								WP[j,i] = 2 * (Weights[j, 1] * Weights[(j+1) : nrow(x), 1])` * P[j, i] * P[(j+1) : nrow(x), i];
+								WP[j, i] = 2 * (Weights[j, 1] * Weights[(j + 1) : nrow(x), 1])` * P[j, i] * P[(j + 1) : nrow(x), i];
 							end;
 						end;
 
 						colTotWP = WP[+,];
 
 						do i=1 to 2;
-							BangBI[i+2, 1] = x[, i]` * Weights / colTot[1, i];
+							BangBI[i + 2, 1] = x[, i]` * Weights / colTot[1, i];
 
 							*BI est;
 							do j = 1 to nrow(x);
 								W2P[j, i] = Weights[j, 1] ## 2 * P[j, i] * Q[j, i];
 								coltotW2P = W2P[+,];
-								BangBI[i+2, 2] = ((coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i])**0.5;	*BI SE;
+								BangBI[i + 2, 2] = ((coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i]) ** 0.5;	*BI SE;
 							end;
 						end;
 					end;
@@ -310,7 +310,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 							do j = 1 to nrow(x);
 								W2P[j, i] = Weights[j, 1] ## 2 * P[j, i] * Q[j, i];
 								coltotW2P = W2P[+,];
-								BangBI[i+2, 2] = ((coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i])**0.5;	*BI SE;
+								BangBI[i+2, 2] = ((coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i]) ** 0.5;	*BI SE;
 							end;
 						end;
 					end;
@@ -348,7 +348,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 	*End of Bang BI;
 %mend;
 
-ods listing; options nodate nonumber pagesize=40 linesize=64 FORMDLIM= FORMCHAR='|_ _ ||||||+=|-/\<>*';
+/*ods listing; options nodate nonumber pagesize=40 linesize=64 FORMCHAR='|_ _ ||||||+=|-/\<>*';*/
 
 *Table III from James' 1996 paper;
 %BI(%str({
