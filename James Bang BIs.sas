@@ -184,7 +184,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 
 		if nrowX = 3 | nrowX = 5 then
 			do;
-				print 'Bang Blinding Index (BI)';
+				print 'Bang Blinding Index (BI) - each arm assesed separately';
 				BangBI = j(2, 4, .);
 				nrowX32 = 0;
 
@@ -243,8 +243,6 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 				if nrowX = 5 & IsEmpty(a) = 0 then
 					do;
 						Weights = {1, 0.5, -0.5, -1, 0.25, -0.25};
-
-/*						print 'Bang Blinding Index (BI)';*/
 						WeightsDef=Weights`;
 						rows = {'Weights'};
 						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'
