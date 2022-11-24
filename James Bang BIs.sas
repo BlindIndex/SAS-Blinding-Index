@@ -13,6 +13,16 @@ Treatment |    n11    |   n12   |          |n11 n12|
 Placebo   |    n21    |   n22   |  --> X = |n21 n22|
 Don't Know|    n31    |   n33   |          |n31 n32|
 
+JAMES_WEIGHTS is 3x2 matrix of the weights assigned and has the following structure and default values:
+          |     Assignment      |
+          |---------------------|
+  Guess	  | Treatment | Placebo |			
+----------|---------------------|
+Treatment |    w11    |   w12   |                      |w11 w12|   |0    0.75|
+Placebo   |    w21    |   w22   |  --> JAMES_WEIGHTS = |w21 w22| = |0.75    1|
+Don't Know|    w31    |   w33   |                      |w31 w32|   |1       1|
+
+
 NOTE: for James' BI, X may have two treatment arms:
                  |                Assignment                  |
                  |--------------------------------------------|
@@ -23,12 +33,23 @@ Treatment, dose2 |       n21   	  |       n22       |	n23   | --> X = |n21 n22 n
 Placebo          |       n31   	  |       n32       |	n33   |         |n31 n32 n33|
 Don't Know       |       n41   	  |       n42       |	n43   |         |n41 n42 n43|
 
+and the accompanying weights as the following:
+                 |                Assignment                  |
+                 |--------------------------------------------|
+     Guess       |Treatment, dose1| Treatment, dose2| Placebo |
+-----------------|----------------------------------|---------|
+Treatment, dose1 |       w11   	  |       w12       |	w13   |                     |w11 w12 w13|   |0     0.5  0.75|
+Treatment, dose2 |       w21   	  |       w22       |	w23   | --> JAMES_WEIGHTS = |w21 w22 w23| = |0.5     0  0.75|
+Placebo          |       w31   	  |       w32       |	w33   |                     |w31 w32 w33|   |0.75 0.75     0|
+Don't Know       |       w41   	  |       w42       |	w43   |                     |w41 w42 w43|   |1       1     1|
+
+
 NOTE: for Bang's BI, X may have five levels of guessing.
 	  In this case an ancillary table for the subjects who answered Don't Know should be provided.
 	  To estimate James BI, Strongly Believe Treatment & Somewhat Believe Treatment aggregated as Treatment,
 	  Somewhat Believe Treatment & Strongly Believe Placebo aggregated as Placebo: 5x2 matrix will be transformed into 3x2 matrix.
 
-5x2 matrix structure:
+5x2 input matrix structure:
          Guess            | Treatment | Placebo |
 --------------------------|---------------------|
 Strongly Believe Treatment|    n11    |   n12   |         |n11 n12|
@@ -46,22 +67,41 @@ Treatment |     n11   |	  n12   | --> ANCILLARY = |n11 n12|
 Placebo   |     n21   |	  n22   |                 |n21 n22|
 
 
-direction is an option to specify a type of the confidence limits:
+For Bang's BI, each arm (Treatment and Placebo) assesed separately,
+the weight matrix for a 5x2 input matrix without an ancillary table has the following structure and default values:
+				|w11|   |1   |
+				|w21|   |0.5 |
+BANG_WEIGHTS =  |w31| = |-0.5|
+				|w41|   |-1  |
+				|w51|   |0   |
+
+the weight matrix for a 5x2 input matrix with an ancillary table has the following structure and default values:
+				|w11|   |1    |
+				|w21|   |0.5  |
+                |w31|   |-0.5 |
+BANG_WEIGHTS = 	|w41| = |-1   |
+				|w51|   |0    |
+                |w61|   |0.25 |
+                |w71|   |-0.25|
+
+DIRECTION is an option to specify a type of the confidence limits:
 
 DIRECTION = 'twosided' - to speicy two-sided 95% confidence limits -- DEFAULT
 DIRECTION = 'less'	   - to specify lef-sided 95% confidence limits
 DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 ;
 
-%macro BI(X, ANCILLARY=%str({}), DIRECTION='TWOSIDED');
+%macro BI(X, ANCILLARY=%str({}), JAMES_WEIGHTS=%str({}), BANG_WEIGHTS=%str({}), DIRECTION='TWOSIDED');
 	title;
 	footnote;
+	dm 'odsresults; clear';
 
 	*James BI: 0 = complete lack of blinding, 0.5 = random guessing, 1 = complete blinding (all report Dont Know);
 	proc iml;
 		x = &X;
 		nrowX = nrow(x);
 		ncolX = ncol(x);
+		JAMES_WEIGHTS = &JAMES_WEIGHTS;
 
 		*aggregate responses if x is a 5x2 matrix;
 		if nrowX = 5 then
@@ -90,6 +130,19 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 		if nrowX = 3 then
 			do;
 				Weights={ 0 0.75, 0.75 0, 1 1 };
+				if IsEmpty(JAMES_WEIGHTS) = 0 then 
+					do;
+						nrowJAMES_WEIGHTS = nrow(JAMES_WEIGHTS);
+						ncolJAMES_WEIGHTS = ncol(JAMES_WEIGHTS);
+						if nrowJAMES_WEIGHTS = 3 & ncolJAMES_WEIGHTS = 2 then Weights = JAMES_WEIGHTS;
+						else
+							do;
+								print 'ERROR: James weights have wrong structure';
+								stop;
+								abort;
+							end;
+					end;
+
 				print 'James Blinding Index (BI)';
 
 				WeightsDef=Weights[,1]`;
@@ -101,6 +154,19 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 		else if nrowX = 4 then
 			do;
 				Weights={ 0 0.5 0.75, 0.5 0 0.75, 0.75 0.75 0, 1 1 1 };
+				if IsEmpty(JAMES_WEIGHTS) = 0 then 
+					do;
+						nrowJAMES_WEIGHTS = nrow(JAMES_WEIGHTS);
+						ncolJAMES_WEIGHTS = ncol(JAMES_WEIGHTS);
+						if nrowJAMES_WEIGHTS = 4 & ncolJAMES_WEIGHTS = 3 then Weights = JAMES_WEIGHTS;
+						else
+							do;
+								print 'ERROR: James weights have wrong structure';
+								stop;
+								abort;
+							end;
+					end;
+
 				print 'James Blinding Index (BI)';
 
 				WeightsDef=Weights[,1]`;
@@ -181,6 +247,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 		x = &X;
 		a = &ANCILLARY;
 		nrowX = nrow(x);
+		BANG_WEIGHTS = &BANG_WEIGHTS;
 
 		if nrowX = 3 | nrowX = 5 then
 			do;
@@ -234,7 +301,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 								WeightsDef = {1 -1 0};
 								rows = {'Weights'};
 								cols = {'Treatment' 'Placebo' 'Dont Know'};
-								mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions'};
+								mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
 								print WeightsDef;
 							end;
 					end;
@@ -243,11 +310,31 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 				if nrowX = 5 & IsEmpty(a) = 0 then
 					do;
 						Weights = {1, 0.5, -0.5, -1, 0.25, -0.25};
+						if IsEmpty(BANG_WEIGHTS) = 0 then 
+							do;
+								nrowBANG_WEIGHTS = nrow(BANG_WEIGHTS);
+								ncolBANG_WEIGHTS = ncol(BANG_WEIGHTS);
+								if nrowBANG_WEIGHTS = 6 & ncolBANG_WEIGHTS = 1 then Weights = BANG_WEIGHTS;
+								else
+									do;
+										print 'ERROR: Bang weights have wrong structure';
+										stop;
+										abort;
+									end;
+							end;
+
+						WeightsDef = {1 -1 0};
+						rows = {'Weights'};
+						cols = {'Treatment' 'Placebo' 'Dont Know'};
+						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
+
+						print WeightsDef;
+
 						WeightsDef=Weights`;
 						rows = {'Weights'};
 						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'
 							'Second guess - treatment' 'Second guess - placebo'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions'};
+						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
 
 						print WeightsDef;
 						colTot = x[+,];
@@ -301,11 +388,32 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 				if nrowX = 5 & IsEmpty(a) = 1 then
 					do;
 						Weights = {1, 0.5, -0.5, -1, 0};
+						if IsEmpty(BANG_WEIGHTS) = 0 then 
+							do;
+								nrowBANG_WEIGHTS = nrow(BANG_WEIGHTS);
+								ncolBANG_WEIGHTS = ncol(BANG_WEIGHTS);
+								if nrowBANG_WEIGHTS = 5 & ncolBANG_WEIGHTS = 1 then Weights = BANG_WEIGHTS;
+								else
+									do;
+										print 'ERROR: Bang weights have wrong structure';
+										stop;
+										abort;
+									end;
+							end;
+
 						print 'No ancillary table';
+
+						WeightsDef = {1 -1 0};
+						rows = {'Weights'};
+						cols = {'Treatment' 'Placebo' 'Dont Know'};
+						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
+
+						print WeightsDef;
+
 						WeightsDef=Weights`;
 						rows = {'Weights'};
 						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo' 'Dont Know'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions'};
+						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
 
 						print WeightsDef;
 						colTot = x[+,];
@@ -456,4 +564,26 @@ X=%str({
 3 3,
 4 5,
 6 8
+}));
+
+*User may modify the weights;
+%BI(
+X=%str({
+38 11,
+44 16,
+21 21,
+4 8,
+170 83
+}),
+JAMES_WEIGHTS=%str({
+0 0.5,
+0.5 0,
+1 1
+}),
+BANG_WEIGHTS=%str({
+1,
+0.4,
+-0.4,
+-1,
+0
 }));
