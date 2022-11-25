@@ -84,6 +84,8 @@ BANG_WEIGHTS = 	|w41| = |-1   |
                 |w61|   |0.25 |
                 |w71|   |-0.25|
 
+Note: the sum of Bang's weigths must be zero.
+
 DIRECTION is an option to specify a type of the confidence limits:
 
 DIRECTION = 'twosided' - to speicy two-sided 95% confidence limits -- DEFAULT
@@ -248,6 +250,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 		a = &ANCILLARY;
 		nrowX = nrow(x);
 		BANG_WEIGHTS = &BANG_WEIGHTS;
+		if IsEmpty(BANG_WEIGHTS) = 0 then BANG_WEIGHTScolTot = round(sum(BANG_WEIGHTS), 0.00000001);
 
 		if nrowX = 3 | nrowX = 5 then
 			do;
@@ -314,10 +317,10 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 							do;
 								nrowBANG_WEIGHTS = nrow(BANG_WEIGHTS);
 								ncolBANG_WEIGHTS = ncol(BANG_WEIGHTS);
-								if nrowBANG_WEIGHTS = 6 & ncolBANG_WEIGHTS = 1 then Weights = BANG_WEIGHTS;
+								if nrowBANG_WEIGHTS = 6 & ncolBANG_WEIGHTS = 1 & BANG_WEIGHTScolTot = 0 then Weights = BANG_WEIGHTS;
 								else
 									do;
-										print 'ERROR: Bang weights have wrong structure';
+										print 'ERROR: Bang weights have wrong structure or their sum is not zero';
 										stop;
 										abort;
 									end;
@@ -392,10 +395,10 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 							do;
 								nrowBANG_WEIGHTS = nrow(BANG_WEIGHTS);
 								ncolBANG_WEIGHTS = ncol(BANG_WEIGHTS);
-								if nrowBANG_WEIGHTS = 5 & ncolBANG_WEIGHTS = 1 then Weights = BANG_WEIGHTS;
+								if nrowBANG_WEIGHTS = 5 & ncolBANG_WEIGHTS = 1 & BANG_WEIGHTScolTot = 0 then Weights = BANG_WEIGHTS;
 								else
 									do;
-										print 'ERROR: Bang weights have wrong structure';
+										print 'ERROR: Bang weights have wrong structure or their sum is not zero';
 										stop;
 										abort;
 									end;
