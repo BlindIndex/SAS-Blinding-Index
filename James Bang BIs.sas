@@ -69,15 +69,15 @@ Placebo   |     n21   |	  n22   |                 |n21 n22|
 
 For Bang's BI, each arm (Treatment and Placebo) assesed separately,
 the weight matrix for a 5x2 input matrix without an ancillary table has the following structure and default values:
-				|w11|   |1   |
-				|w21|   |0.5 |
+                |w11|   |1   |
+                |w21|   |0.5 |
 BANG_WEIGHTS =  |w31| = |-0.5|
-				|w41|   |-1  |
-				|w51|   |0   |
+                |w41|   |-1  |
+                |w51|   |0   |
 
 the weight matrix for a 5x2 input matrix with an ancillary table has the following structure and default values:
-				|w11|   |1    |
-				|w21|   |0.5  |
+                |w11|   |1    |
+                |w21|   |0.5  |
                 |w31|   |-0.5 |
 BANG_WEIGHTS = 	|w41| = |-1   |
                 |w51|   |0.25 |
