@@ -80,9 +80,8 @@ the weight matrix for a 5x2 input matrix with an ancillary table has the followi
 				|w21|   |0.5  |
                 |w31|   |-0.5 |
 BANG_WEIGHTS = 	|w41| = |-1   |
-				|w51|   |0    |
-                |w61|   |0.25 |
-                |w71|   |-0.25|
+                |w51|   |0.25 |
+                |w61|   |-0.25|
 
 Note: the sum of Bang's weigths must be zero.
 
