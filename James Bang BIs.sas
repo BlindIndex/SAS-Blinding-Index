@@ -88,8 +88,8 @@ Note: the sum of Bang's weigths must be zero.
 DIRECTION is an option to specify a type of the confidence limits:
 
 DIRECTION = 'twosided' - to speicy two-sided 95% confidence limits -- DEFAULT
-DIRECTION = 'less'	   - to specify lef-sided 95% confidence limits
-DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
+DIRECTION = 'lower'	   - to specify lef-sided 95% confidence limits
+DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 ;
 
 %macro BI(X, ANCILLARY=%str({}), JAMES_WEIGHTS=%str({}), BANG_WEIGHTS=%str({}), DIRECTION='TWOSIDED');
@@ -146,6 +146,14 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 
 				print 'James Blinding Index (BI)';
 
+				assignment = x[1:3, 1:2];
+				rows = {'Treatment' 'Placebo' 'Dont Know'};
+				cols = {'Treatment' 'Placebo'};
+				mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+				print assignment;
+				x22 = x[1:2, 1:2];
+				Tot22=x22[+];
+
 				WeightsDef=Weights[,1]`;
 				rows = {'Weights'};
 				cols = {'Correct Guess' 'Wrong Guess' 'Dont Know'};
@@ -170,6 +178,14 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 
 				print 'James Blinding Index (BI)';
 
+				assignment = x[1:4, 1:3];
+				rows = {'Treatment, Dose 1' 'Treatment, Dose 2'  'Placebo' 'Dont Know'};
+				cols = {'Treatment, Dose 1' 'Treatment, Dose 2' 'Placebo'};
+				mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+				print assignment;
+				x32 = x[1:3, 1:2];
+				Tot22=x32[+];
+
 				WeightsDef=Weights[,1]`;
 				rows = {'Weights'};
 				cols = {'Correct Guess' 'Correct Treatment, Wrong Dose'  'Wrong Treatment' 'Dont Know'};
@@ -189,54 +205,61 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 		Pde = 0;
 		denom = 0;
 
-		do i=1 to (nrow(P) - 2);
-			do j=1 to (ncol(P) - 1);
-				Pdo = Pdo + ((Weights[i, j] * P[i, j]) / (1 - Pdk));
-				Pde = Pde + ((Weights[i, j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j])) / (1 - Pdk) ** 2);
-				denom = denom + Weights[i, j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j]);
-			end;
-		end;
-
-		denom = 4 * denom ** 2;
-		Kd = (Pdo - Pde) / Pde;
 		JamesBI = j(1, 4, .);
-		JamesBI[1,1] = round((1 + Pdk + (1 - Pdk) * Kd) / 2, .001);
-		num = 0;
 
-		do i=1 to nrow(P) - 2;
-			do j=1 to ncol(P) - 1;
-				part2 = 0;
+		if Tot22 > 0 then do;
+				do i=1 to (nrow(P) - 2);
+					do j=1 to (ncol(P) - 1);
+						Pdo = Pdo + ((Weights[i, j] * P[i, j]) / (1 - Pdk));
+						Pde = Pde + ((Weights[i, j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j])) / (1 - Pdk) ** 2);
+						denom = denom + Weights[i, j] * P[i, ncol(P)] * (P[nrow(P), j] - P[nrow(P) - 1, j]);
+					end;
+				end;
+				denom = 4 * denom ** 2;
+				Kd = (Pdo - Pde) / Pde;
 
-				do r=1 to ncol(P) - 1;
-					part2 = part2 + (weights[r, j] * P[r, ncol(P)] + Weights[i, r] * (P[nrow(P), r] - P[nrow(P) - 1, r]));
+				JamesBI[1,1] = round((1 + Pdk + (1 - Pdk) * Kd) / 2, .001);
+				num = 0;
+
+				do i=1 to nrow(P) - 2;
+					do j=1 to ncol(P) - 1;
+						part2 = 0;
+
+						do r=1 to ncol(P) - 1;
+							part2 = part2 + (weights[r, j] * P[r, ncol(P)] + Weights[i, r] * (P[nrow(P), r] - P[nrow(P) - 1, r]));
+						end;
+
+						num = num + ((P[i, j] * (1 - Pdk) ** 2 * ((1 - Pdk) * Weights[i, j] - (1 + Kd) * part2) ** 2));
+					end;
 				end;
 
-				num = num + ((P[i, j] * (1 - Pdk) ** 2 * ((1 - Pdk) * Weights[i, j] - (1 + Kd) * part2) ** 2));
-			end;
+				v = (num / denom + Pdk * (1 - Pdk) - (1 - Pdk) * (1 + Kd) * (Pdk + ((1 - Pdk) * (1 + Kd)) / 4));
+				JamesBI[,2] = (v / x[nrow(x), ncol(x)]) ** 0.5;
 		end;
-
-		v = (num / denom + Pdk * (1 - Pdk) - (1 - Pdk) * (1 + Kd) * (Pdk + ((1 - Pdk) * (1 + Kd)) / 4));
-		JamesBI[,2] = (v / x[nrow(x), ncol(x)]) ** 0.5;
+		else if Tot22 = 0 then do;
+			JamesBI[1,1] = 1;
+			JamesBI[1,2] = 0;
+		end;
 
 		if length(&direction)= 0 | upcase(&direction)= ("TWOSIDED") then
 			do;
 				JamesBI[1,3] = JamesBI[1,1] - quantile('normal', 0.975) * JamesBI[1,2];
 				JamesBI[1,4] = JamesBI[1,1] + quantile('normal', 0.975) * JamesBI[1,2];
-				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, two-sided CL'} format=7.3;
+				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, two-sided Confidence Limit (CL)'} format=7.3;
 			end;
 
-		if upcase(&direction)= "LESS" then
+		if upcase(&direction)= "LOWER" then
 			do;
 				JamesBI[1,3] = 0;
 				JamesBI[1,4] = JamesBI[1,1] + quantile('normal', 0.95) * JamesBI[1,2];
-				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, one-sided CL'} format=7.3;
+				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, one-sided Confidence Limit (CL)'} format=7.3;
 			end;
 
-		else if upcase(&direction) = "GREATER" then
+		else if upcase(&direction) = "UPPER" then
 			do;
 				JamesBI[1,3] = JamesBI[1,1] - quantile('normal', 0.95) * JamesBI[1,2];
 				JamesBI[1,4] = 1;
-				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, one-sided CL'} format=7.3;
+				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, one-sided Confidence Limit (CL)'} format=7.3;
 			end;
 
 		print JamesBI;
@@ -282,17 +305,28 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 					do;
 						if nrowX32 = 0 then
 							x32 = x;
+
+						assignment = x32[1:3, 1:2];
+						rows = {'Treatment' 'Placebo' 'Dont Know'};
+						cols = {'Treatment' 'Placebo'};
+						mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+						print assignment;
+						x22 = x32[1:2, 1:2];
+						colTot22=x22[+,];
+
 						N = x32[+];
 						nrowX32 = nrow(x32);
 						ncolX32 = ncol(x32);
 						rowTot32 = x32[,+];
 						x32 = insert(x32, rowTot32, 0, ncolX32 + 1);
 						colTot32 = x32[+,];
+
 						x32 = insert(x32, colTot32, nrowX32 + 1);
 						x32 = x32`;
 
 						do i=1 to 2;
-							BangBI[i,1] = (2 * (x32[i, i] / (x32[i, 1] + x32[i, 2])) - 1) * ((x32[i, 1] + x32[i, 2]) / (x32[i, 1] + x32[i, 2] + x32[i, 3]));	*BI est;
+							if colTot22[1,i] > 0 then BangBI[i,1] = (2 * (x32[i, i] / (x32[i, 1] + x32[i, 2])) - 1) * ((x32[i, 1] + x32[i, 2]) / (x32[i, 1] + x32[i, 2] + x32[i, 3]));	*BI est;
+							else if colTot22[1,i] = 0 then BangBI[i,1] = 0;
 							BangBI[i,2] = sqrt(((x32[i, 1] / x32[i, ncol(x32)]) * (1 - (x32[i, 1] / x32[i, ncol(x32)])) +
 								(x32[i, 2] / x32[i, ncol(x32)]) * (1 - (x32[i, 2] / x32[i, ncol(x32)])) +
 								2 * (x32[i, 1] / x32[i, ncol(x32)]) * (x32[i, 2] / x32[i, ncol(x32)])) / x32[i, ncol(x32)]);	*BI SE;
@@ -329,31 +363,36 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 						rows = {'Weights'};
 						cols = {'Treatment' 'Placebo' 'Dont Know'};
 						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
-
 						print WeightsDef;
 
-						WeightsDef=Weights`;
-						rows = {'Weights'};
-						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'
-							'Second guess - treatment' 'Second guess - placebo'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
-
-						print WeightsDef;
 						colTot = x[+,];
 
 						*remove Dont Know row;
 						x = x[1:4,];
 
 						*modify the second column in x and a matrices;
-						x1 = x[,1];
-						x2 = x[4:1,2];
+						x1 = x[, 1];
+						x2 = x[4:1, 2];
 						x = x1||x2;
-						a1 = a[,1];
-						a2 = a[2:1,2];
+						a1 = a[, 1];
+						a2 = a[2:1, 2];
 						a = a1||a2;
 
 						*combine  matrices x and a;
 						x = x // a;
+
+						assignment = x;
+						rows = {'Strongly Believe Treatment' 'Somewhat Believe Treatment' 'Somewhat Believe Placebo' 'Strongly Believe Placebo' 'Second Guess: Treatment' 'Second Guess: Placebo'};
+						cols = {'Treatment' 'Placebo'};
+						mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+						print assignment;
+
+						WeightsDef=Weights`;
+						rows = {'Weights'};
+						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'
+							'Second guess: treatment' 'Second guess: placebo'};
+						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
+						print WeightsDef;
 
 						*create empty matrices;
 						P  = j(6, 2, .);
@@ -362,7 +401,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 						W2P = j(6, 2, .);
 
 						do i=1 to ncol(x);
-							P[, i]  = x[, i] / colTot[1, i];
+							P[, i] = x[, i] / colTot[1, i];
 							Q[, i] = Q[, i] - P[, i];
 						end;
 
@@ -375,9 +414,7 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 						colTotWP = WP[+,];
 
 						do i=1 to 2;
-							BangBI[i + 2, 1] = x[, i]` * Weights / colTot[1, i];
-
-							*BI est;
+							if colTot[1, i] > 0 then BangBI[i + 2, 1] = x[, i]` * Weights / colTot[1, i];  *BI est;
 							do j = 1 to nrow(x);
 								W2P[j, i] = Weights[j, 1] ## 2 * P[j, i] * Q[j, i];
 								coltotW2P = W2P[+,];
@@ -403,21 +440,26 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 									end;
 							end;
 
-						print 'No ancillary table';
-
 						WeightsDef = {1 -1 0};
 						rows = {'Weights'};
 						cols = {'Treatment' 'Placebo' 'Dont Know'};
 						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
-
 						print WeightsDef;
+
+						print 'No ancillary table';
+
+						assignment = x;
+						rows = {'Strongly Believe Treatment' 'Somewhat Believe Treatment' 'Somewhat Believe Placebo' 'Strongly Believe Placebo' 'Dont Know'};
+						cols = {'Treatment' 'Placebo'};
+						mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+						print assignment;
 
 						WeightsDef=Weights`;
 						rows = {'Weights'};
 						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo' 'Dont Know'};
 						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
-
 						print WeightsDef;
+
 						colTot = x[+,];
 
 						*create empty matrices;
@@ -455,31 +497,31 @@ DIRECTION = 'greater'  - to specify right-sided 95% confidence limits
 						end;
 					end;
 
-
 				if length(&direction)= 0 | upcase(&direction)= ("TWOSIDED") then
 					do;
 						BangBI[,3] = BangBI[,1] - quantile('normal', 0.975) * BangBI[,2];	*lower CL;
 						BangBI[,4] = BangBI[,1] + quantile('normal', 0.975) * BangBI[,2];	*upper CL;
 						mattrib BangBI rowname = {'Treatment, 3x2' 'Placebo, 3x2' 'Treatment, 5x2' 'Placebo, 5x2'} 
 							colname = {'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'}
-							label = {'Bang BI, two-sided CL'} format = 7.3;
+							label = {'Bang BI, two-sided Confidence Limits (CL)'} format = 7.3;
 					end;
 
-				if upcase(&direction)= "LESS" then
+				if upcase(&direction)= "LOWER" then
 					do;
 						BangBI[,3] = -1;
 						BangBI[,4] = BangBI[,1] + quantile('normal', 0.95) * BangBI[,2];
 						mattrib BangBI rowname = {'Treatment, 3x2' 'Placebo, 3x2' 'Treatment, 5x2' 'Placebo, 5x2'} 
 							colname = {'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'}
-							label = {'Bang BI, one-sided CL'} format = 7.3;
+							label = {'Bang BI, one-sided Confidence Limits (CL)'} format = 7.3;
 					end;
-				else if upcase(&direction) = "GREATER" then
+
+				else if upcase(&direction) = "UPPER" then
 					do;
 						BangBI[,3] = BangBI[,1] - quantile('normal', 0.95) * BangBI[,2];
 						BangBI[,4] = 1;
 						mattrib BangBI rowname = {'Treatment, 3x2' 'Placebo, 3x2' 'Treatment, 5x2' 'Placebo, 5x2'} 
 							colname = {'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'}
-							label = {'Bang BI, one-sided CL'} format = 7.3;
+							label = {'Bang BI, one-sided Confidence Limits (CL)'} format = 7.3;
 					end;
 
 				print BangBI;
@@ -545,7 +587,7 @@ X=%str({
 ANCILLARY=%str({
 79 36,
 86 45
-}), direction='twosided'
+}), direction='upper'
 );
 
 *Table 6 from Bang's 2004 paper;
@@ -568,6 +610,7 @@ X=%str({
 6 8
 }));
 
+
 *User may modify the weights;
 %BI(
 X=%str({
@@ -589,3 +632,49 @@ BANG_WEIGHTS=%str({
 -1,
 0
 }));
+
+
+*testing special cases;
+%BI(
+%str({
+0 27,
+0 29,
+170 83
+}));
+
+%BI(
+%str({
+82 0,
+25 0,
+170 83
+}));
+
+%BI(
+%str({
+0 0,
+0 0,
+170 83
+}));
+
+%BI(
+%str({
+0 0,
+0 0,
+0 0,
+0 0,
+170 83
+}));
+
+%BI(
+%str({
+0 0,
+0 0,
+0 0,
+0 0,
+170 83
+}), 
+ANCILLARY=%str({
+79 36,
+86 45
+}), direction='upper'
+);
