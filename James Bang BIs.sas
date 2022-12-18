@@ -148,7 +148,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 
 				assignment = x[1:3, 1:2];
 				rows = {'Treatment' 'Placebo' 'Dont Know'};
-				cols = {'Treatment' 'Placebo'};
+				cols = {'Treatment' 'Placebo' 'Weights'};
 				mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
 				print assignment;
 				x22 = x[1:2, 1:2];
@@ -180,7 +180,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 
 				assignment = x[1:4, 1:3];
 				rows = {'Treatment, Dose 1' 'Treatment, Dose 2'  'Placebo' 'Dont Know'};
-				cols = {'Treatment, Dose 1' 'Treatment, Dose 2' 'Placebo'};
+				cols = {'Treatment, Dose 1' 'Treatment, Dose 2' 'Placebo' 'Weights'};
 				mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
 				print assignment;
 				x32 = x[1:3, 1:2];
@@ -276,7 +276,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 
 		if nrowX = 3 | nrowX = 5 then
 			do;
-				print 'Bang Blinding Index (BI) - each arm assesed separately';
+				print 'Bang Blinding Index (BI) - each arm assessed separately';
 				BangBI = j(2, 4, .);
 				nrowX32 = 0;
 
@@ -293,12 +293,12 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 					end;
 
 				*Weights assignment:
-					1 	 = strongly believe treatment
-					0.5  = somewhat believe treatment
-					-0.5 = somewhat believe placebo
-					-1 	 = strongly believe placebo
-					0.25 = ancillary, treatment
-					-0.25= ancillary, placebo;
+					1     = strongly believe treatment
+					0.5   = somewhat believe treatment
+					-0.5  = somewhat believe placebo
+					-1    = strongly believe placebo
+					0.25  = ancillary, treatment
+					-0.25 = ancillary, placebo;
 
 				*3x2;
 				if nrowX = 3 | nrowX32 = 3 then
@@ -307,10 +307,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 							x32 = x;
 
 						assignment = x32[1:3, 1:2];
-						rows = {'Treatment' 'Placebo' 'Dont Know'};
-						cols = {'Treatment' 'Placebo'};
-						mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
-						print assignment;
+
 						x22 = x32[1:2, 1:2];
 						colTot22=x22[+,];
 
@@ -332,19 +329,29 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 								2 * (x32[i, 1] / x32[i, ncol(x32)]) * (x32[i, 2] / x32[i, ncol(x32)])) / x32[i, ncol(x32)]);	*BI SE;
 						end;
 
-						if nrowX = 3 & IsEmpty(a) = 1 then 
-							do;
+/*						if nrowX = 3 & IsEmpty(a) = 1 then */
+/*							do;*/
 								WeightsDef = {1 -1 0};
-								rows = {'Weights'};
-								cols = {'Treatment' 'Placebo' 'Dont Know'};
-								mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
-								print WeightsDef;
-							end;
+/*								rows = {'Weights'};*/
+/*								cols = {'Treatment' 'Placebo' 'Dont Know'};*/
+/*								mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};*/
+/*								print WeightsDef;*/
+								assignment = assignment || WeightsDef`;
+/*							end;*/
+/*							else do;*/
+/*								assignment = assignment || Weights;*/
+/*							end;*/
+
+						rows = {'Treatment' 'Placebo' 'Dont Know'};
+						cols = {'Treatment' 'Placebo' 'Weights'};
+						mattrib assignment rowname = (rows) colname =(cols) label = {'3x2: Guess / Blinding Assignment / Weights'};
+						print assignment;
 					end;
 
 				*5x2 with a 2x2 ancillary;
 				if nrowX = 5 & IsEmpty(a) = 0 then
 					do;
+
 						Weights = {1, 0.5, -0.5, -1, 0.25, -0.25};
 						if IsEmpty(BANG_WEIGHTS) = 0 then 
 							do;
@@ -359,16 +366,18 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 									end;
 							end;
 
-						WeightsDef = {1 -1 0};
-						rows = {'Weights'};
-						cols = {'Treatment' 'Placebo' 'Dont Know'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
-						print WeightsDef;
+/*						WeightsDef = {1 -1 0};*/
+/*						rows = {'Weights'};*/
+/*						cols = {'Treatment' 'Placebo' 'Dont Know'};*/
+/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};*/
+/*						print WeightsDef;*/
 
 						colTot = x[+,];
 
 						*remove Dont Know row;
 						x = x[1:4,];
+
+						assignment = x // a || Weights;
 
 						*modify the second column in x and a matrices;
 						x1 = x[, 1];
@@ -381,23 +390,22 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 						*combine  matrices x and a;
 						x = x // a;
 
-						assignment = x;
 						rows = {'Strongly Believe Treatment' 'Somewhat Believe Treatment' 'Somewhat Believe Placebo' 'Strongly Believe Placebo' 'Second Guess: Treatment' 'Second Guess: Placebo'};
-						cols = {'Treatment' 'Placebo'};
-						mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+						cols = {'Treatment' 'Placebo' 'Weights'};
+						mattrib assignment rowname = (rows) colname =(cols) label = {'5x2: Guess / Blinding Assignment / Weights'};
 						print assignment;
 
-						WeightsDef=Weights`;
-						rows = {'Weights'};
-						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'
-							'Second guess: treatment' 'Second guess: placebo'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
-						print WeightsDef;
+/*						WeightsDef=Weights`;*/
+/*						rows = {'Weights'};*/
+/*						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'*/
+/*							'Second guess: treatment' 'Second guess: placebo'};*/
+/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};*/
+/*						print WeightsDef;*/
 
 						*create empty matrices;
-						P  = j(6, 2, .);
-						Q  = j(6, 2, 1);
-						WP = j(5, 2, .);
+						P   = j(6, 2, .);
+						Q   = j(6, 2, 1);
+						WP  = j(5, 2, .);
 						W2P = j(6, 2, .);
 
 						do i=1 to ncol(x);
@@ -414,11 +422,12 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 						colTotWP = WP[+,];
 
 						do i=1 to 2;
-							if colTot[1, i] > 0 then BangBI[i + 2, 1] = x[, i]` * Weights / colTot[1, i];  *BI est;
+							BangBI[i + 2, 1] = x[, i]` * Weights / colTot[1, i];  *BI est;
 							do j = 1 to nrow(x);
 								W2P[j, i] = Weights[j, 1] ## 2 * P[j, i] * Q[j, i];
 								coltotW2P = W2P[+,];
-								BangBI[i + 2, 2] = ((coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i]) ** 0.5;	*BI SE;
+								BangBI[i + 2, 2] = (coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i];	*BI SE;
+								BangBI[i + 2, 2] = (choose(BangBI[i + 2, 2] >= 0, BangBI[i + 2, 2], .)) ** 0.5;	*BI SE;
 							end;
 						end;
 					end;
@@ -426,6 +435,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 				*5x2 without a 2x2 ancillary;
 				if nrowX = 5 & IsEmpty(a) = 1 then
 					do;
+
 						Weights = {1, 0.5, -0.5, -1, 0};
 						if IsEmpty(BANG_WEIGHTS) = 0 then 
 							do;
@@ -440,32 +450,32 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 									end;
 							end;
 
-						WeightsDef = {1 -1 0};
-						rows = {'Weights'};
-						cols = {'Treatment' 'Placebo' 'Dont Know'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};
-						print WeightsDef;
+/*						WeightsDef = {1 -1 0};*/
+/*						rows = {'Weights'};*/
+/*						cols = {'Treatment' 'Placebo' 'Dont Know'};*/
+/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};*/
+/*						print WeightsDef;*/
 
 						print 'No ancillary table';
 
-						assignment = x;
+						assignment = x || Weights;
 						rows = {'Strongly Believe Treatment' 'Somewhat Believe Treatment' 'Somewhat Believe Placebo' 'Strongly Believe Placebo' 'Dont Know'};
-						cols = {'Treatment' 'Placebo'};
-						mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
+						cols = {'Treatment' 'Placebo' 'Weights'};
+						mattrib assignment rowname = (rows) colname =(cols) label = {'5x2: Guess / Blinding Assignment / Weights'};
 						print assignment;
 
-						WeightsDef=Weights`;
-						rows = {'Weights'};
-						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo' 'Dont Know'};
-						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};
-						print WeightsDef;
+/*						WeightsDef=Weights`;*/
+/*						rows = {'Weights'};*/
+/*						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo' 'Dont Know'};*/
+/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};*/
+/*						print WeightsDef;*/
 
 						colTot = x[+,];
 
 						*create empty matrices;
-						P  = j(5, 2, .);
-						Q  = j(5, 2, 1);
-						WP = j(5, 2, .);
+						P   = j(5, 2, .);
+						Q   = j(5, 2, 1);
+						WP  = j(5, 2, .);
 						W2P = j(5, 2, .);
 
 						do i=1 to ncol(x);
@@ -476,7 +486,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 						do i = 1 to ncol(x);
 							if i = ncol(x) then Weights = -1 * Weights;
 							do j = 1 to nrow(x)-1;
-								WP[j,i] = 2 * (Weights[j, 1] * Weights[(j+1) : nrow(x), 1])` * P[j, i] * P[(j+1) : nrow(x), i];
+								WP[j, i] = 2 * (Weights[j, 1] * Weights[(j + 1) : nrow(x), 1])` * P[j, i] * P[(j + 1) : nrow(x), i];
 							end;
 						end;
 
@@ -492,7 +502,8 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 							do j = 1 to nrow(x);
 								W2P[j, i] = Weights[j, 1] ## 2 * P[j, i] * Q[j, i];
 								coltotW2P = W2P[+,];
-								BangBI[i+2, 2] = ((coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i]) ** 0.5;	*BI SE;
+								BangBI[i + 2, 2] = (coltotW2P[1, i] + colTotWP[1, i]) / colTot[1, i];	*BI SE;
+								BangBI[i + 2, 2] = (choose(BangBI[i + 2, 2] >= 0, BangBI[i + 2, 2], .)) ** 0.5;	*BI SE;
 							end;
 						end;
 					end;
@@ -587,7 +598,7 @@ X=%str({
 ANCILLARY=%str({
 79 36,
 86 45
-}), direction='upper'
+}), direction='twosided'
 );
 
 *Table 6 from Bang's 2004 paper;
@@ -676,5 +687,20 @@ BANG_WEIGHTS=%str({
 ANCILLARY=%str({
 79 36,
 86 45
-}), direction='upper'
+})
+);
+
+
+%BI(
+%str({
+60 50,
+0 0,
+20 15,
+0 0,
+170 83
+}), 
+ANCILLARY=%str({
+79 36,
+86 45
+})
 );
