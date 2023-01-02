@@ -97,6 +97,143 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 	footnote;
 	dm 'odsresults; clear';
 
+	*custom templates;
+	proc template;
+		define table Custom1;
+			column Guess Treatment Placebo;
+		define column Guess;
+			define header Guessh;
+				just = c;
+				vjust = c;
+			end;
+			header = Guessh;
+		end;
+		define column Treatment;
+			justify = on;
+			just = c;
+		end;
+		define column Placebo;
+			justify = on;
+			just = c;
+		end;
+		define header SpanHeader;
+			text "Treatment Assignment";
+			start = Treatment;
+			end   = Placebo;
+		end;
+		end;
+	run;
+	proc template;
+		define table Custom2;
+			column Guess Treatment1 Treatment2 Placebo;
+		define column Guess;
+			define header Guessh;
+				just = c;
+				vjust = c;
+			end;
+			header = Guessh;
+		end;
+		define column Treatment1;
+			define header Treatment1h;
+				text 'Treatment, Dose 1';
+			end;
+			header = Treatment1h;
+			justify = on;
+			just = c;
+		end;
+		define column Treatment2;
+			define header Treatment2h;
+				text 'Treatment, Dose 2';
+			end;
+			header = Treatment2h;
+			justify = on;
+			just = c;
+		end;
+		define column Placebo;
+			justify = on;
+			just = c;
+		end;
+		define header SpanHeader;
+			text "Treatment Assignment";
+			start = Treatment1;
+			end   = Placebo;
+		end;
+		end;
+	run;
+	proc template;
+		define table Custom3;
+			column Guess Treatment Placebo Weights;
+		define column Guess;
+			define header Guessh;
+				just = c;
+				vjust = c;
+			end;
+			header = Guessh;
+		end;
+		define column Treatment;
+			justify = on;
+			just = c;
+		end;
+		define column Placebo;
+			justify = on;
+			just = c;
+		end;
+		define header SpanHeader;
+			text "Treatment Assignment, 3x2";
+			start = Treatment;
+			end   = Placebo;
+		end;
+		define column Weights;
+			define header Weightsh;
+				text 'Weights';
+				just = c;
+				vjust = c;
+			end;
+			header = Weightsh;
+			justify = on;
+			just = c;
+		end;
+		end;
+	run;
+	proc template;
+		define table Custom4;
+			column Guess Treatment Placebo Weights;
+		define column Guess;
+			define header Guessh;
+				just = c;
+				vjust = c;
+			end;
+			header = Guessh;
+		end;
+		define column Treatment;
+			justify = on;
+			just = c;
+		end;
+		define column Placebo;
+			justify = on;
+			just = c;
+		end;
+		define header SpanHeader;            /* define spanning header */
+			text "Treatment Assignment, 5x2";     /* title of spanning header */
+			start = Treatment;                  /* span starts at second column */
+			end   = Placebo;                  /* span ends at third column */
+		end;
+		define column Weights;
+			define header Weightsh;
+				text 'Weights';
+				just = c;
+				vjust = c;
+			end;
+			header = Weightsh;
+			justify = on;
+			just = c;
+		end;
+		end;
+	run;
+	*end of custom templates;
+
+
+
 	*James BI: 0 = complete lack of blinding, 0.5 = random guessing, 1 = complete blinding (all report Dont Know);
 	proc iml;
 		x = &X;
@@ -144,21 +281,25 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 							end;
 					end;
 
-				print 'James Blinding Index (BI)';
+				print 'James Blinding Index (BI): ranges from 0 to 1';
 
 				assignment = x[1:3, 1:2];
-				rows = {'Treatment' 'Placebo' 'Dont Know'};
-				cols = {'Treatment' 'Placebo' 'Weights'};
-				mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
-				print assignment;
+
+				vars = {'Treatment', 'Placebo', 'Dont Know'};
+				tbl = TableCreate("Guess", vars);
+				call TableAddVar(tbl, {'Treatment' 'Placebo'}, assignment);
+				call TablePrint(tbl) template="Custom1";
+
 				x22 = x[1:2, 1:2];
-				Tot22=x22[+];
+				Tot22 = x22[+];
 
 				WeightsDef=Weights[,1]`;
-				rows = {'Weights'};
-				cols = {'Correct Guess' 'Wrong Guess' 'Dont Know'};
-				mattrib WeightsDef rowname = (rows) colname =(cols) label = {'James BI: Weights and Definitions'};
-				print (WeightsDef);
+
+				vars = {'Weight'};
+				tbl = TableCreate('_', vars);
+				call TableAddVar(tbl, {'Correct Guess' 'Wrong Guess' 'Dont Know'}, WeightsDef); 
+				call TablePrint(tbl) ID = '_' justify = {c c c c} label = 'James BI: Weights and Definitions';
+
 			end;
 		else if nrowX = 4 then
 			do;
@@ -176,21 +317,25 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 							end;
 					end;
 
-				print 'James Blinding Index (BI)';
+				print 'James Blinding Index (BI): ranges from 0 to 1';
 
 				assignment = x[1:4, 1:3];
-				rows = {'Treatment, Dose 1' 'Treatment, Dose 2'  'Placebo' 'Dont Know'};
-				cols = {'Treatment, Dose 1' 'Treatment, Dose 2' 'Placebo' 'Weights'};
-				mattrib assignment rowname = (rows) colname =(cols) label = {'Guess / Blinding Assignment'};
-				print assignment;
+
+				vars = {'Treatment, Dose 1', 'Treatment, Dose 2', 'Placebo', 'Dont Know'};
+				tbl = TableCreate("Guess", vars);
+				call TableAddVar(tbl, {'Treatment1' 'Treatment2' 'Placebo'}, assignment);
+				call TablePrint(tbl) template="Custom2";
+
 				x32 = x[1:3, 1:2];
 				Tot22=x32[+];
 
 				WeightsDef=Weights[,1]`;
-				rows = {'Weights'};
-				cols = {'Correct Guess' 'Correct Treatment, Wrong Dose'  'Wrong Treatment' 'Dont Know'};
-				mattrib WeightsDef rowname = (rows) colname =(cols) label = {'James BI: Weights and Definitions'};
-				print (WeightsDef);
+
+				vars = {'Weight'};
+				tbl = TableCreate('_', vars);
+				call TableAddVar(tbl, {'Correct Guess' 'Correct Treatment, Wrong Dose'  'Wrong Treatment' 'Dont Know'}, WeightsDef); 
+				call TablePrint(tbl) ID = '_' justify = {c c c c c} label = 'James BI: Weights and Definitions';
+
 			end;
 		else if nrowX >< 5 then
 			do;
@@ -237,37 +382,62 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 				JamesBI[,2] = (v / x[nrow(x), ncol(x)]) ** 0.5;
 		end;
 		else if Tot22 = 0 then do;
-			JamesBI[1,1] = 1;
-			JamesBI[1,2] = 0;
+			JamesBI[1, 1] = 1;
+			JamesBI[1, 2] = 0;
 		end;
 
+		message = {''};
 		if length(&direction)= 0 | upcase(&direction)= ("TWOSIDED") then
 			do;
-				JamesBI[1,3] = JamesBI[1,1] - quantile('normal', 0.975) * JamesBI[1,2];
-				JamesBI[1,4] = JamesBI[1,1] + quantile('normal', 0.975) * JamesBI[1,2];
-				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, two-sided Confidence Limit (CL)'} format=7.3;
+				JamesBI[1, 3] = JamesBI[1, 1] - quantile('normal', 0.975) * JamesBI[1, 2];
+				JamesBI[1, 4] = JamesBI[1, 1] + quantile('normal', 0.975) * JamesBI[1, 2];
+				if JamesBI[1, 1] ^= 1 & JamesBI[1, 1] ^= 0 then do;
+					if JamesBI[1, 4] < 0.5 then int = {'unblinding may be claimed (0.5 is not in 95% CI)'};
+					else if 0.5 < JamesBI[1, 3] then int = {'unblinding may be claimed (0.5 is not in 95% CI)'};
+					else int = {};
+				end;
+				else if JamesBI[1, 1] = 1 then int = {'complete blinding'};
+				else if JamesBI[1, 1] = 0 then int = {'complete unblinding'};
+				l = 'James BI, two-sided Confidence Inetrval (CI)';
 			end;
 
 		if upcase(&direction)= "LOWER" then
 			do;
-				JamesBI[1,3] = 0;
-				JamesBI[1,4] = JamesBI[1,1] + quantile('normal', 0.95) * JamesBI[1,2];
-				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, one-sided Confidence Limit (CL)'} format=7.3;
+				JamesBI[1, 3] = 0;
+				JamesBI[1, 4] = JamesBI[1, 1] + quantile('normal', 0.95) * JamesBI[1, 2];
+				l = 'James BI, one-sided Confidence Interval (CI)';
 			end;
 
 		else if upcase(&direction) = "UPPER" then
 			do;
-				JamesBI[1,3] = JamesBI[1,1] - quantile('normal', 0.95) * JamesBI[1,2];
-				JamesBI[1,4] = 1;
-				mattrib JamesBI rowname={'Overall'} colname={'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'} label={'James BI, one-sided Confidence Limit (CL)'} format=7.3;
+				JamesBI[1, 3] = JamesBI[1, 1] - quantile('normal', 0.95) * JamesBI[1, 2];
+				JamesBI[1, 4] = 1;
+				l = 'James BI, one-sided Confidence Interval (CI)';
 			end;
 
-		print JamesBI;
-	quit;
+		if IsEmpty(int) = 1 then do;
+			vars = {'Overall'};
+			tbl = TableCreate("Type", vars);
+			call TableAddVar(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL'}, JamesBI);
+			call TableSetVarFormat(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL'}, {'7.3' '7.3' '7.3' '7.3'});
+			call TablePrint(tbl) ID = 'Type' justify = {c c c c c} label = l;
+		end;
+		else do;
+			vars = {'Overall'};
+			tblint = TableCreate('Interpretation', int);
+			tbl = TableCreate("Type", vars);
+			call TableAddVar(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL' }, JamesBI);
+			tbl = tbl || tblint;
+			call TableSetVarFormat(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL'}, {'7.3' '7.3' '7.3' '7.3'});
+			call TablePrint(tbl) ID = 'Type' justify = {c c c c c c} label = l;
+		end;
+
 	*End of James BI;
 
+print '----------------------------------------------------------------';
+
 	*Bang BI: -1 = opposite guessing, 0 = perfect blinding, 1 = complete lack of blinding;
-	proc iml;
+
 		x = &X;
 		a = &ANCILLARY;
 		nrowX = nrow(x);
@@ -276,7 +446,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 
 		if nrowX = 3 | nrowX = 5 then
 			do;
-				print 'Bang Blinding Index (BI) - each arm assessed separately';
+				print 'Bang Blinding Index (BI): ranges from -1 to 1 - each treatment arm assessed separately';
 				BangBI = j(2, 4, .);
 				nrowX32 = 0;
 
@@ -300,6 +470,8 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 					0.25  = ancillary, treatment
 					-0.25 = ancillary, placebo;
 
+				arms = {'Treatment, 3x2', 'Placebo, 3x2'};
+
 				*3x2;
 				if nrowX = 3 | nrowX32 = 3 then
 					do;
@@ -322,30 +494,20 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 						x32 = x32`;
 
 						do i=1 to 2;
-							if colTot22[1,i] > 0 then BangBI[i,1] = (2 * (x32[i, i] / (x32[i, 1] + x32[i, 2])) - 1) * ((x32[i, 1] + x32[i, 2]) / (x32[i, 1] + x32[i, 2] + x32[i, 3]));	*BI est;
-							else if colTot22[1,i] = 0 then BangBI[i,1] = 0;
+							if colTot22[1,i] > 0 then BangBI[i,1] = (2 * (x32[i, i] / (x32[i, 1] + x32[i, 2])) - 1) * ((x32[i, 1] + x32[i, 2]) / 
+								(x32[i, 1] + x32[i, 2] + x32[i, 3]));	*BI est;
 							BangBI[i,2] = sqrt(((x32[i, 1] / x32[i, ncol(x32)]) * (1 - (x32[i, 1] / x32[i, ncol(x32)])) +
 								(x32[i, 2] / x32[i, ncol(x32)]) * (1 - (x32[i, 2] / x32[i, ncol(x32)])) +
 								2 * (x32[i, 1] / x32[i, ncol(x32)]) * (x32[i, 2] / x32[i, ncol(x32)])) / x32[i, ncol(x32)]);	*BI SE;
 						end;
 
-/*						if nrowX = 3 & IsEmpty(a) = 1 then */
-/*							do;*/
-								WeightsDef = {1 -1 0};
-/*								rows = {'Weights'};*/
-/*								cols = {'Treatment' 'Placebo' 'Dont Know'};*/
-/*								mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};*/
-/*								print WeightsDef;*/
-								assignment = assignment || WeightsDef`;
-/*							end;*/
-/*							else do;*/
-/*								assignment = assignment || Weights;*/
-/*							end;*/
+						WeightsDef = {1 -1 0};
+						assignment = assignment || WeightsDef`;
 
-						rows = {'Treatment' 'Placebo' 'Dont Know'};
-						cols = {'Treatment' 'Placebo' 'Weights'};
-						mattrib assignment rowname = (rows) colname =(cols) label = {'3x2: Guess / Blinding Assignment / Weights'};
-						print assignment;
+						vars = {'Treatment', 'Placebo', 'Dont Know'};
+						tbl = TableCreate("Guess", vars);
+						call TableAddVar(tbl, {'Treatment' 'Placebo' 'Weights'}, assignment);
+						call TablePrint(tbl) template="Custom3";
 					end;
 
 				*5x2 with a 2x2 ancillary;
@@ -366,12 +528,6 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 									end;
 							end;
 
-/*						WeightsDef = {1 -1 0};*/
-/*						rows = {'Weights'};*/
-/*						cols = {'Treatment' 'Placebo' 'Dont Know'};*/
-/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};*/
-/*						print WeightsDef;*/
-
 						colTot = x[+,];
 
 						*remove Dont Know row;
@@ -390,17 +546,11 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 						*combine  matrices x and a;
 						x = x // a;
 
-						rows = {'Strongly Believe Treatment' 'Somewhat Believe Treatment' 'Somewhat Believe Placebo' 'Strongly Believe Placebo' 'Second Guess: Treatment' 'Second Guess: Placebo'};
-						cols = {'Treatment' 'Placebo' 'Weights'};
-						mattrib assignment rowname = (rows) colname =(cols) label = {'5x2: Guess / Blinding Assignment / Weights'};
-						print assignment;
-
-/*						WeightsDef=Weights`;*/
-/*						rows = {'Weights'};*/
-/*						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo'*/
-/*							'Second guess: treatment' 'Second guess: placebo'};*/
-/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};*/
-/*						print WeightsDef;*/
+						vars = {'Strongly Believe Treatment', 'Somewhat Believe Treatment', 'Somewhat Believe Placebo', 'Strongly Believe Placebo', 
+							'Second Guess: Treatment', 'Second Guess: Placebo'};
+						tbl = TableCreate("Guess", vars);
+						call TableAddVar(tbl, {'Treatment' 'Placebo' 'Weights'}, assignment);
+						call TablePrint(tbl) template="Custom4";
 
 						*create empty matrices;
 						P   = j(6, 2, .);
@@ -430,6 +580,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 								BangBI[i + 2, 2] = (choose(BangBI[i + 2, 2] >= 0, BangBI[i + 2, 2], .)) ** 0.5;	*BI SE;
 							end;
 						end;
+						arms = {'Treatment, 3x2', 'Placebo, 3x2', 'Treatment, 5x2', 'Placebo, 5x2'};
 					end;
 
 				*5x2 without a 2x2 ancillary;
@@ -450,25 +601,14 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 									end;
 							end;
 
-/*						WeightsDef = {1 -1 0};*/
-/*						rows = {'Weights'};*/
-/*						cols = {'Treatment' 'Placebo' 'Dont Know'};*/
-/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 3x2'};*/
-/*						print WeightsDef;*/
-
 						print 'No ancillary table';
 
 						assignment = x || Weights;
-						rows = {'Strongly Believe Treatment' 'Somewhat Believe Treatment' 'Somewhat Believe Placebo' 'Strongly Believe Placebo' 'Dont Know'};
-						cols = {'Treatment' 'Placebo' 'Weights'};
-						mattrib assignment rowname = (rows) colname =(cols) label = {'5x2: Guess / Blinding Assignment / Weights'};
-						print assignment;
 
-/*						WeightsDef=Weights`;*/
-/*						rows = {'Weights'};*/
-/*						cols = {'Strongly believe treatment' 'Somewhat believe treatment' 'Somewhat believe placebo' 'Strongly believe placebo' 'Dont Know'};*/
-/*						mattrib WeightsDef rowname = (rows) colname =(cols) label = {'Bang BI: Weights and Definitions for 5x2'};*/
-/*						print WeightsDef;*/
+						vars = {'Strongly Believe Treatment', 'Somewhat Believe Treatment', 'Somewhat Believe Placebo', 'Strongly Believe Placebo', 'Dont Know'};
+						tbl = TableCreate("Guess", vars);
+						call TableAddVar(tbl, {'Treatment' 'Placebo' 'Weights'}, assignment);
+						call TablePrint(tbl) template="Custom4";
 
 						colTot = x[+,];
 
@@ -496,9 +636,8 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 
 						do i=1 to 2;
 							if i = ncol(x) then Weights = -1 * Weights;
-							BangBI[i+2, 1] = x[, i]` * Weights / colTot[1, i];
+							BangBI[i + 2, 1] = x[, i]` * Weights / colTot[1, i];	*BI est;
 
-							*BI est;
 							do j = 1 to nrow(x);
 								W2P[j, i] = Weights[j, 1] ## 2 * P[j, i] * Q[j, i];
 								coltotW2P = W2P[+,];
@@ -506,36 +645,112 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 								BangBI[i + 2, 2] = (choose(BangBI[i + 2, 2] >= 0, BangBI[i + 2, 2], .)) ** 0.5;	*BI SE;
 							end;
 						end;
+						arms = {'Treatment, 3x2', 'Placebo, 3x2', 'Treatment, 5x2', 'Placebo, 5x2'};
 					end;
 
-				if length(&direction)= 0 | upcase(&direction)= ("TWOSIDED") then
+				d = {0 0};
+
+				if length(&direction)= 0 | upcase(&direction) = ("TWOSIDED") then
 					do;
 						BangBI[,3] = BangBI[,1] - quantile('normal', 0.975) * BangBI[,2];	*lower CL;
 						BangBI[,4] = BangBI[,1] + quantile('normal', 0.975) * BangBI[,2];	*upper CL;
-						mattrib BangBI rowname = {'Treatment, 3x2' 'Placebo, 3x2' 'Treatment, 5x2' 'Placebo, 5x2'} 
-							colname = {'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'}
-							label = {'Bang BI, two-sided Confidence Limits (CL)'} format = 7.3;
+
+						if BangBI[1, 1] = -1 then BI1 = {'opposite guessing'};
+						else if BangBI[1, 1] = 1 then BI1 = {'complete unblinding'};
+						else if -0.2 <= BangBI[1, 1] & BangBI[1, 1] <= 0.2 then BI1 = {'blinding may be claimed successful (-0.2 <= BI <= 0.2)'};
+						else BI1 = {' '};
+
+						if BangBI[2, 1]  = -1 then BI2 = {'opposite guessing'};
+						else if BangBI[2, 1] = 1 then BI2 = {'complete unblinding'};
+						else if -0.2 <= BangBI[2, 1] & BangBI[2, 1] <= 0.2 then BI2 = {'blinding may be claimed successful (-0.2 <= BI <= 0.2)'};
+						else BI2 = {' '};
+
+						d = dimension(BangBI);
+
+						if d[1, 1] > 2 then do;
+							if BangBI[3, 1] = 1 then BI3 = {'opposite guessing'};
+							else if BangBI[3, 1] = 1 then BI3 = {'complete unblinding'};
+							else if -0.2 <= BangBI[3, 1] & BangBI[3, 1] <= 0.2 then BI3 = {'blinding may be claimed successful (-0.2 <= BI <= 0.2)'};
+							else BI3 = {' '};
+
+							if BangBI[4, 1] = 1 then BI4 = {'opposite guessing'};
+							else if BangBI[4, 1] = 1 then BI4 = {'complete unblinding'};
+							else if -0.2 <= BangBI[4, 1] & BangBI[4, 1] <= 0.2 then BI4 = {'blinding may be claimed successful (-0.2 <= BI <= 0.2)'};
+							else BI4 = {' '};
+
+							if BI1[1, 1] ^= ' ' | BI2[1, 1] ^= ' ' | BI3[1, 1] ^= ' ' | BI4[1, 1] ^= ' ' then int = BI1 // BI2 // BI3 // BI4;
+							else int = {};
+						end;
+						else if BI1[1, 1] ^= ' ' | BI2[1, 1] ^= ' ' then int =  BI1 // BI2;
+						else int = {};
+						l = 'Bang BI, two-sided Confidence Interval (CI)';
 					end;
 
 				if upcase(&direction)= "LOWER" then
 					do;
 						BangBI[,3] = -1;
 						BangBI[,4] = BangBI[,1] + quantile('normal', 0.95) * BangBI[,2];
-						mattrib BangBI rowname = {'Treatment, 3x2' 'Placebo, 3x2' 'Treatment, 5x2' 'Placebo, 5x2'} 
-							colname = {'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'}
-							label = {'Bang BI, one-sided Confidence Limits (CL)'} format = 7.3;
+
+						if BangBI[1, 4] < 0 then BI1 = {'unblinding may be claimed (0 is not in 95% CI)'};
+						else BI1 = {' '};
+						if BangBI[2, 4] < 0 then BI2 = {'unblinding may be claimed (0 is not in 95% CI)'};
+						else BI2 = {' '};
+
+						d = dimension(BangBI);
+
+						if d[1, 1] > 2 then do;
+							if BangBI[3, 4] < 0 then BI3 = {'unblinding may be claimed (0 is not in 95% CI)'};
+							else BI3 = {' '};
+							if BangBI[4, 4] < 0 then BI4 = {'unblinding may be claimed (0 is not in 95% CI)'};
+							else BI4 = {' '};
+							if BI1[1, 1] ^= ' ' | BI2[1, 1] ^= ' ' | BI3[1, 1] ^= ' ' | BI4[1, 1] ^= ' ' then int = BI1 // BI2 // BI3 // BI4;
+							else int = {};
+						end;
+						else if BI1[1, 1] ^= ' ' | BI2[1, 1] ^= ' ' then int =  BI1 // BI2;
+						else int = {};
+						l = 'Bang BI, one-sided Confidence Interval (CI)';
 					end;
 
 				else if upcase(&direction) = "UPPER" then
 					do;
 						BangBI[,3] = BangBI[,1] - quantile('normal', 0.95) * BangBI[,2];
 						BangBI[,4] = 1;
-						mattrib BangBI rowname = {'Treatment, 3x2' 'Placebo, 3x2' 'Treatment, 5x2' 'Placebo, 5x2'} 
-							colname = {'BI Estimate' 'SE' 'Lower 95% CL' 'Upper 95% CL'}
-							label = {'Bang BI, one-sided Confidence Limits (CL)'} format = 7.3;
+
+						if 0 < BangBI[1, 3] then BI1 = {'unblinding may be claimed (0 is not in 95% CI)'};
+						else BI1 = {' '};
+						if 0 < BangBI[2, 3] then BI2 = {'unblinding may be claimed (0 is not in 95% CI)'};
+						else BI2 = {' '};
+
+						d = dimension(BangBI);
+
+						if d[1, 1] > 2 then do;
+							if 0 < BangBI[3, 3] then BI3 = {'unblinding may be claimed (0 is not in 95% CI)'};
+							else BI3 = {' '};
+							if 0 < BangBI[4, 3] then BI4 = {'unblinding may be claimed (0 is not in 95% CI)'};
+							else BI4 = {' '};
+							if BI1[1, 1] ^= ' ' | BI2[1, 1] ^= ' ' | BI3[1, 1] ^= ' ' | BI4[1, 1] ^= ' ' then int = BI1 // BI2 // BI3 // BI4;
+							else int = {};
+						end;
+						else if BI1[1, 1] ^= ' ' | BI2[1, 1] ^= ' ' then int =  BI1 // BI2;
+						else int = {};
+						l = 'Bang BI, one-sided Confidence Interval (CI)';
 					end;
 
-				print BangBI;
+				if IsEmpty(int) = 1 then do;
+					tbl = TableCreate("Arm", arms);
+					call TableAddVar(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL'}, BangBI);
+					call TableSetVarFormat(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL'}, {'7.3' '7.3' '7.3' '7.3'});
+					call TablePrint(tbl) ID = 'Arm' justify = {c c c c c} label = l;
+				end;
+				else do;
+					tblint = TableCreate('Interpretation', int);
+					tbl = TableCreate("Arm", arms);
+					call TableAddVar(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL' }, BangBI);
+					tbl = tbl || tblint;
+					call TableSetVarFormat(tbl, {'BI Estimate' 'StdErr' 'Lower 95% CL' 'Upper 95% CL'}, {'7.3' '7.3' '7.3' '7.3'});
+					call TablePrint(tbl) ID = 'Arm' justify = {c c c c c c} label = l;
+				end;
+
 			end;
 		else
 			do;
@@ -547,7 +762,8 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 	*End of Bang BI;
 %mend;
 
-/*ods listing; options nodate nonumber pagesize=40 linesize=64 FORMCHAR='|_ _ ||||||+=|-/\<>*';*/
+
+/*ods _all_ close; ods listing; options nodate nonumber pagesize=60 linesize=100 FORMCHAR='|_ _ ||||||+=|-/\<>*';*/
 
 *Table III from James' 1996 paper;
 %BI(%str({
@@ -557,28 +773,47 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 44 51 52
 }), direction='twosided');
 
-*Table V from James' 1996 paper;
+*Table V from James' 1996 paper with interpretation;
 %BI(%str({
 145 34,	
 71 59,	
 76 38
 }));
+*with interpretation;
+%BI(%str({
+145 34,	
+71 59,	
+76 38
+}), direction='upper');
+*no interpretation;
+%BI(%str({
+145 34,	
+71 59,	
+76 38
+}), direction='lower');
 
-*Table 4 from Bang's 2010 paper;
+*James: Unblinding message for two-sided CL with interpretation;
+%BI(%str({
+179 0,	
+41 89,	
+76 38
+}));
+
+*Table 4 from Bang's 2010 paper with interpretation;
 %BI(%str({
 21 19,
 0 4,
 24 26
 }));
 
-*Table 5 from Bang's 2010 paper;
+*Table 5 from Bang's 2010 paper with interpretation;
 %BI(%str({
 41 14,
 55 99,
 130 106
 }));
 
-*Table 7 from Bang's 2004 paper;
+*Table 7 from Bang's 2004 paper with interpretation;
 %BI(
 %str({
 82 27,
@@ -586,7 +821,7 @@ DIRECTION = 'upper'  - to specify right-sided 95% confidence limits
 170 83
 }));
 
-*Table 6 and 8 from Bang's 2004 paper;
+*Table 6 and 8 from Bang's 2004 paper with interpretation;
 %BI(
 X=%str({
 38 11,
@@ -601,7 +836,7 @@ ANCILLARY=%str({
 }), direction='twosided'
 );
 
-*Table 6 from Bang's 2004 paper;
+*Table 6 from Bang's 2004 paper with interpretation;
 %BI(
 X=%str({
 38 11,
@@ -611,7 +846,7 @@ X=%str({
 170 83
 }));
 
-*Stata example, http://fmwww.bc.edu/RePEc/bocode/b/blinding.html;
+*Stata example, http://fmwww.bc.edu/RePEc/bocode/b/blinding.html with interpretation;
 %BI(
 %str({
 2 2,
@@ -643,7 +878,6 @@ BANG_WEIGHTS=%str({
 -1,
 0
 }));
-
 
 *testing special cases;
 %BI(
@@ -689,7 +923,6 @@ ANCILLARY=%str({
 86 45
 })
 );
-
 
 %BI(
 %str({
